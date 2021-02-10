@@ -2,7 +2,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
-
+from django.core.exceptions import ValidationError 
 
 class Company(models.Model):
 
@@ -15,6 +15,13 @@ class Company(models.Model):
         return self.name
 
 
+def validate_hours(value):
+    if value >=0 and value <10000:
+        return value
+    else:
+        raise ValidationError("This field accepts values between 0 and 10000 ")
+
+
 class Project(models.Model):
 
     company = models.ForeignKey('projects.Company', on_delete=models.PROTECT, related_name='projects')
@@ -23,14 +30,14 @@ class Project(models.Model):
     start_date = models.DateField('Project start date', blank=True, null=True)
     end_date = models.DateField('Project end date', blank=True, null=True)
 
-    estimated_design = models.PositiveSmallIntegerField('Estimated design hours')
-    actual_design = models.PositiveSmallIntegerField('Actual design hours', default=0)
+    estimated_design = models.DecimalField('Estimated design hours', max_digits=7, decimal_places=2, validators =[validate_hours])
+    actual_design = models.DecimalField('Actual design hours', default=0, max_digits=7, decimal_places=2, validators =[validate_hours])
 
-    estimated_development = models.PositiveSmallIntegerField('Estimated development hours')
-    actual_development = models.PositiveSmallIntegerField('Actual development hours', default=0)
+    estimated_development = models.DecimalField('Estimated development hours', max_digits=7, decimal_places=2, validators =[validate_hours])
+    actual_development = models.DecimalField('Actual development hours', default=0, max_digits=7, decimal_places=2, validators =[validate_hours])
 
-    estimated_testing = models.PositiveSmallIntegerField('Estimated testing hours')
-    actual_testing = models.PositiveSmallIntegerField('Actual testing hours', default=0)
+    estimated_testing = models.DecimalField('Estimated testing hours', max_digits=7, decimal_places=2, validators =[validate_hours])
+    actual_testing = models.DecimalField('Actual testing hours', default=0, max_digits=7, decimal_places=2, validators =[validate_hours])
 
     def __str__(self):
         return self.title
