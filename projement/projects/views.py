@@ -32,13 +32,14 @@ class AssignmentView(TemplateView):
 
 class DashboardView(LoginRequiredMixin, ListView):
     model = Project
-    ordering = ('-start_date',)
+    ordering = ('-end_date',)
     context_object_name = 'projects'
     template_name = 'projects/dashboard.html'
 
     def get_queryset(self):
         projects = super().get_queryset()
         projects = projects.select_related('company')
+        projects = sorted(projects, key=lambda m:(m.has_ended,))
 
         return projects
 
