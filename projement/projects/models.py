@@ -2,7 +2,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
-from django.core.exceptions import ValidationError 
+from django.core.exceptions import ValidationError
+from simple_history.models import HistoricalRecords
 
 class Company(models.Model):
 
@@ -10,13 +11,14 @@ class Company(models.Model):
         verbose_name_plural = "companies"
 
     name = models.CharField(max_length=128)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
 
 
 def validate_hours(value):
-    if value >=0 and value <10000:
+    if value >= 0 and value < 10000:
         return value
     else:
         raise ValidationError("This field accepts values between 0 and 10000 ")
@@ -24,20 +26,30 @@ def validate_hours(value):
 
 class Project(models.Model):
 
-    company = models.ForeignKey('projects.Company', on_delete=models.PROTECT, related_name='projects')
+    company = models.ForeignKey(
+        'projects.Company', on_delete=models.PROTECT, related_name='projects')
 
     title = models.CharField('Project title', max_length=128)
     start_date = models.DateField('Project start date', blank=True, null=True)
     end_date = models.DateField('Project end date', blank=True, null=True)
 
-    estimated_design = models.DecimalField('Estimated design hours', max_digits=7, decimal_places=2, validators =[validate_hours])
-    actual_design = models.DecimalField('Actual design hours', default=0, max_digits=7, decimal_places=2, validators =[validate_hours])
+    estimated_design = models.DecimalField(
+        'Estimated design hours', max_digits=7, decimal_places=2, validators=[validate_hours])
+    actual_design = models.DecimalField(
+        'Actual design hours', default=0, max_digits=7, decimal_places=2, validators=[validate_hours])
 
-    estimated_development = models.DecimalField('Estimated development hours', max_digits=7, decimal_places=2, validators =[validate_hours])
-    actual_development = models.DecimalField('Actual development hours', default=0, max_digits=7, decimal_places=2, validators =[validate_hours])
+    estimated_development = models.DecimalField(
+        'Estimated development hours', max_digits=7, decimal_places=2, validators=[validate_hours])
+    actual_development = models.DecimalField(
+        'Actual development hours', default=0, max_digits=7, decimal_places=2, validators=[validate_hours])
 
-    estimated_testing = models.DecimalField('Estimated testing hours', max_digits=7, decimal_places=2, validators =[validate_hours])
-    actual_testing = models.DecimalField('Actual testing hours', default=0, max_digits=7, decimal_places=2, validators =[validate_hours])
+    estimated_testing = models.DecimalField(
+        'Estimated testing hours', max_digits=7, decimal_places=2, validators=[validate_hours])
+    actual_testing = models.DecimalField(
+        'Actual testing hours', default=0, max_digits=7, decimal_places=2, validators=[validate_hours])
+
+    tags = models.ManyToManyField('Tags')
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.title
@@ -60,3 +72,11 @@ class Project(models.Model):
     @property
     def is_over_budget(self):
         return self.total_actual_hours > self.total_estimated_hours
+
+
+class Tags(models.Model):
+    name = models.CharField(max_length=16)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.name

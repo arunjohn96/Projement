@@ -41,7 +41,7 @@ class DashboardView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         projects = super().get_queryset()
         projects = projects.select_related('company')
-        projects = sorted(projects, key=lambda m:(m.has_ended,))
+        projects = sorted(projects, key=lambda m: (m.has_ended,))
 
         return projects
 
@@ -53,23 +53,23 @@ class DashboardView(LoginRequiredMixin, ListView):
             return HttpResponse(' Something went wrong!')
 
         projects = projects.values(
-            'id', 'company', 'title', 'start_date','end_date','estimated_design',
-            'actual_design','estimated_development','actual_development',
-            'estimated_testing','actual_testing'
+            'id', 'company', 'title', 'start_date', 'end_date', 'estimated_design',
+            'actual_design', 'estimated_development', 'actual_development',
+            'estimated_testing', 'actual_testing'
         ).order_by('id')
         data = OrderedDict()
         sheet_data = {"Projects": [
-            ['SNo','ID', 'company', 'title', 'start_date','end_date','estimated_design',
-            'actual_design','estimated_development','actual_development',
-            'estimated_testing','actual_testing']]}
+            ['SNo', 'ID', 'company', 'title', 'start_date', 'end_date', 'estimated_design',
+             'actual_design', 'estimated_development', 'actual_development',
+             'estimated_testing', 'actual_testing']]}
         i = 1
         for project in projects:
             project_details = {}
-            project_details['data']=[i,project['id'], project['company'],
-                project['title'],project['start_date'],project['end_date'],
-                project['estimated_design'],project['actual_design'],
-                project['estimated_development'],project['actual_development'],
-                project['estimated_testing'],project['actual_testing']]
+            project_details['data'] = [i, project['id'], project['company'],
+                                       project['title'], project['start_date'], project['end_date'],
+                                       project['estimated_design'], project['actual_design'],
+                                       project['estimated_development'], project['actual_development'],
+                                       project['estimated_testing'], project['actual_testing']]
             sheet_data['Projects'].append(project_details['data'])
             i += 1
         data.update(sheet_data)
@@ -90,7 +90,8 @@ class ProjectUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         project = form.save(commit=False)
-        project.actual_design =project.actual_design + self.get_object().actual_design
-        project.actual_testing =project.actual_testing + self.get_object().actual_testing
-        project.actual_development =project.actual_development + self.get_object().actual_development
+        project.actual_design = project.actual_design + self.get_object().actual_design
+        project.actual_testing = project.actual_testing + self.get_object().actual_testing
+        project.actual_development = project.actual_development + \
+            self.get_object().actual_development
         return super(ProjectUpdateView, self).form_valid(form)
