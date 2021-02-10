@@ -47,4 +47,12 @@ class DashboardView(LoginRequiredMixin, ListView):
 class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     model = Project
     form_class = ProjectForm
+    initial = {}
     success_url = reverse_lazy('dashboard')
+
+    def form_valid(self, form):
+        project = form.save(commit=False)
+        project.actual_design =project.actual_design + self.get_object().actual_design
+        project.actual_testing =project.actual_testing + self.get_object().actual_testing
+        project.actual_development =project.actual_development + self.get_object().actual_development
+        return super(ProjectUpdateView, self).form_valid(form)
