@@ -1,5 +1,5 @@
 import os
-
+from collections import OrderedDict
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls.base import reverse_lazy
@@ -7,11 +7,13 @@ from django.utils.safestring import mark_safe
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
-
+from io import BytesIO
 from markdown import markdown
-
+from pyexcel_xls import save_data
 from projects.forms import ProjectForm
 from projects.models import Project
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
 
 
 class AssignmentView(TemplateView):
@@ -42,6 +44,42 @@ class DashboardView(LoginRequiredMixin, ListView):
         projects = sorted(projects, key=lambda m:(m.has_ended,))
 
         return projects
+
+    def download_project_xlsx(self):
+        try:
+            projects = Project.objects.all()
+
+        except ObjectDoesNotExist:
+            return HttpResponse(' Something went wrong!')
+
+        projects = projects.values(
+            'id', 'company', 'title', 'start_date','end_date','estimated_design',
+            'actual_design','estimated_development','actual_development',
+            'estimated_testing','actual_testing'
+        ).order_by('id')
+        data = OrderedDict()
+        sheet_data = {"Projects": [
+            ['SNo','ID', 'company', 'title', 'start_date','end_date','estimated_design',
+            'actual_design','estimated_development','actual_development',
+            'estimated_testing','actual_testing']]}
+        i = 1
+        for project in projects:
+            project_details = {}
+            project_details['data']=[i,project['id'], project['company'],
+                project['title'],project['start_date'],project['end_date'],
+                project['estimated_design'],project['actual_design'],
+                project['estimated_development'],project['actual_development'],
+                project['estimated_testing'],project['actual_testing']]
+            sheet_data['Projects'].append(project_details['data'])
+            i += 1
+        data.update(sheet_data)
+        io = BytesIO()
+        save_data(io, data)
+        io.seek(0)
+        response = HttpResponse(
+            io.read(), content_type='application/ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="ProjectData.xls"'
+        return response
 
 
 class ProjectUpdateView(LoginRequiredMixin, UpdateView):
